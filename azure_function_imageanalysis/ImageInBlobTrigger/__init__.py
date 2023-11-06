@@ -2,7 +2,7 @@ import logging
 from unittest import result
 
 import azure.functions as func
-from PIL import Image
+from PIL import Image, ImageFilter
 import io
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from azure.cognitiveservices.vision.computervision.models import VisualFeatureTypes
@@ -42,12 +42,16 @@ def main(imagein: func.InputStream, imageresult: func.Out[str], context: func.Co
         print("No description detected.")
     else:
         for caption in description_result.captions:
-            summarized_captions_arr.append("'{}' with confidence {:.2f}%".format(caption.text, caption.confidence * 100))
+            summarized_captions_arr.append("'{}' confidence {:.2f}%".format(caption.text, caption.confidence * 100))
             
     summarized_captions = ',\n'.join(summarized_captions_arr)
+    tags = list(description_result.tags)
 
     image.thumbnail((256,256))
     img_byte_arr_resized = io.BytesIO()
+
+    if "swimsuit" in tags or "underpants" in tags:
+        image = image.filter(ImageFilter.GaussianBlur(20))
     
     image.convert('RGB').save(img_byte_arr_resized, format='JPEG')
 
@@ -59,6 +63,7 @@ def main(imagein: func.InputStream, imageresult: func.Out[str], context: func.Co
         "image": imageBase64,
         "name": imagein.name,
         "description": summarized_captions,
+        "tags": ','.join(tags),
         "PartitionKey": "imageresults",
         "RowKey": rowKey
     }
