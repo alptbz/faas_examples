@@ -1,0 +1,20 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "imagein",
+      "type": "blobTrigger",
+      "direction": "in",
+      "path": "images/input/{blobname}",
+      "connection": "AzureWebJobsStorage"
+    },
+    {
+      "name": "imageresult",
+      "type": "table",
+      "tableName": "imageresults",
+      "partitionKey": "imageresults",
+      "connection": "AzureWebJobsStorage",
+      "direction": "out"
+    }
+  ]
+}
